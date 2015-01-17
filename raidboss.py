@@ -14,9 +14,13 @@ import time
 #ドラゴンプロヴィデンス页面操作类
 class drapro:
     #レイド救援依頼url匹配
-    help_request_re = re.compile(r'a href="(.*)".*class="btnImgRaid2 new.*</a>')
+    help_request_re = re.compile(r'a href="(.*?)".*?\
+                                   class="btnImgRaid2 new.*?</a>')
     #未点击レイドboosID匹配
-    boss_id_re = re.compile(r'<article class="raidList new">[\s\S]*<a href="http://www.drapro.dmmgames.com/raid/battle_top/(\d+).*".*class="btn push-motion0">[\s\S]*</article>')
+    boss_id_re = re.compile(
+        r'<article class="raidList new">[\s\S]*?\
+          <a href="http://www.drapro.dmmgames.com/raid/battle_top/(\d+).*?".*?\
+          class="btn push-motion0">[\s\S]*?</article>')
     #header
     header = {
     'User-Agent' : 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 \
@@ -29,6 +33,7 @@ class drapro:
         req = urllib2.Request(url, headers = self.header)
         response  = self.opener.open(req)
         page = response.read()
+        #print page
         return page.decode("utf-8")
 
     #打开レイドbossurl，返回レイド救援依頼带new的页面地址，没有找到则为空
@@ -42,9 +47,11 @@ class drapro:
         fileHandle = open('raid_boss.log','a')
         for id in boss_id_list:
             #第一次0bp的url
-            msg = self.__openurl(u'http://www.drapro.dmmgames.com/raid/raid_battle_practice/'
-                                 + id + u'/1/0')
-            currenttime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+            msg = self.__openurl(u'http://www.drapro.dmmgames.com/\
+                                   raid/raid_battle_practice/'
+                                + id + u'/1/0')
+            currenttime = time.strftime('%Y-%m-%d %H:%M:%S',
+                                        time.localtime(time.time()))
             print 'time :' + currenttime
             print 'boss_id :' + id
             print msg
@@ -60,7 +67,7 @@ class drapro:
             boss_id = self.get_boss_id(hrequest_url[0])
             if boss_id:
                 print boss_id
-                self.beat_boss(boss_id)
+                #self.beat_boss(boss_id)
             else:
                 print u'没有新raidboss'
                 return
@@ -99,13 +106,13 @@ def main():
     cookiej = cookielib.CookieJar()
     cookiej.set_cookie(make_cookie("open_id", "12379742", cookieurl))
     cookiej.set_cookie(make_cookie("open_sess_id", 
-                              "eb0694995925aa2cb3f7b63ce5dc15fb16d2af3b", 
+                              "31a89e11dfe75ea9178724a298a80cf93cfaf11c", 
                                cookieurl))
     cookiej.set_cookie(make_cookie("pc", "1", cookieurl))
     pross = drapro(cj = cookiej)
     while True:
         pross.run()
-        time.sleep(100)
+        time.sleep(60)
 #------End of funciton main------
 
 
