@@ -14,17 +14,13 @@ import time
 #ドラゴンプロヴィデンス页面操作类
 class drapro:
     #レイド救援依頼url匹配
-    help_request_re = re.compile(r'a href="(.*?)".*?\
-                                   class="btnImgRaid2 new.*?</a>')
+    help_request_re = re.compile(r'a href="(.*?)".*?class="btnImgRaid2 new.*?</a>')
     #未点击レイドboosID匹配
     boss_id_re = re.compile(
-        r'<article class="raidList new">[\s\S]*?\
-          <a href="http://www.drapro.dmmgames.com/raid/battle_top/(\d+).*?".*?\
-          class="btn push-motion0">[\s\S]*?</article>')
+        r'<article class="raidList new">[\s\S]*?<a href="http://www.drapro.dmmgames.com/raid/battle_top/(\d+).*?".*?class="btn push-motion0">[\s\S]*?</article>')
     #header
     header = {
-    'User-Agent' : 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 \
-                 (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36'
+    'User-Agent' : 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36'
     }
     def __init__(self, cj): 
         self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -47,8 +43,7 @@ class drapro:
         fileHandle = open('raid_boss.log','a')
         for id in boss_id_list:
             #第一次0bp的url
-            msg = self.__openurl(u'http://www.drapro.dmmgames.com/\
-                                   raid/raid_battle_practice/'
+            msg = self.__openurl(u'http://www.drapro.dmmgames.com/raid/raid_battle_practice/'
                                 + id + u'/1/0')
             currenttime = time.strftime('%Y-%m-%d %H:%M:%S',
                                         time.localtime(time.time()))
@@ -67,7 +62,7 @@ class drapro:
             boss_id = self.get_boss_id(hrequest_url[0])
             if boss_id:
                 print boss_id
-                #self.beat_boss(boss_id)
+                self.beat_boss(boss_id)
             else:
                 print u'没有新raidboss'
                 return
@@ -112,7 +107,7 @@ def main():
     pross = drapro(cj = cookiej)
     while True:
         pross.run()
-        time.sleep(60)
+        time.sleep(100)
 #------End of funciton main------
 
 
