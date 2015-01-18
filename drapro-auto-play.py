@@ -7,6 +7,7 @@
 #缺陷：自己打不过的boss不能救援请求，cookie失效后脚本就无用
 #代码：编码不整洁，混乱
 #Create Date: 01/16/2015
+import httplib
 import urllib2
 import cookielib
 import re
@@ -35,15 +36,15 @@ class drapro:
 
     #探索选择的stage匹配
     stage_4_re = re.compile(
-        r'<a href="(.*?quest_exec/5.*?)".*?class="btnMR push-motion0">')
+        r'<a href="(.*?quest_exec/6.*?)".*?class="btnMR push-motion0">')
 
     #用于判断是否是出现areaboss
     area_boss_re = re.compile(
-        r'<a href="(.*?boss_battle_flash/5.*?)" class="btnLR push-motion0">')
+        r'<a href="(.*?boss_battle_flash/6.*?)" class="btnLR push-motion0">')
 
     #area重开时需要第二次匹配url
     area_again_re = re.compile(
-        r'var nextUrl = "(http:/.*?/quest_exec/5.*?)";')
+        r'var nextUrl = "(http:/.*?/quest_exec/6.*?)";')
 
     #保存已打了自己的raidboss的次数
     self_boss_beat_times = 0
@@ -98,7 +99,7 @@ class drapro:
 
     #打boss, method = "1"免费, method = "2"一倍攻击，method = "3"三倍攻击
     def beat_boss(self, boss_id, method = '1'):
-        #fileHandle = open('raid_boss.log','a')
+        fileHandle = open('raid_boss.log','a')
         #第一次0bp的url
         msg = self.__openurl(
             u'http://www.drapro.dmmgames.com/raid/raid_battle_practice/'
@@ -108,10 +109,10 @@ class drapro:
         print 'time :' + currenttime
         print 'boss_id :' + boss_id
         print msg
-        #fileHandle.write ('time :'+ str(currenttime) +'\n' 
-        #                + 'boss_id :' + str(boss_id) + '\n'
-        #                + str(msg) + '\n')
-        #fileHandle.close()
+        fileHandle.write ('time :'+ str(currenttime) +'\n' 
+                        + 'boss_id :' + str(boss_id) + '\n'
+                        + str(msg) + '\n')
+        fileHandle.close()
 
     #外部调用的主函数
     def run(self, raid_url = "http://www.drapro.dmmgames.com/raid"):
@@ -124,10 +125,10 @@ class drapro:
             if boss_id:
                 self.beat_other_boss(boss_id)
             else:
-                print u'没有新raidboss'
+                print '没有新raidboss'
                 return
         else:
-            print u'没有新raidboss'
+            print '没有新raidboss'
             return
 
     #自动探索
@@ -179,7 +180,7 @@ def main():
     cookiej = cookielib.CookieJar()
     cookiej.set_cookie(make_cookie("open_id", "12379742", cookieurl))
     cookiej.set_cookie(make_cookie("open_sess_id", 
-                              "939dc26712a6d5b7e6a51c3502b290b9f6dbc2ee", 
+                              "068d0372779e971c5dd208a256416efd237e7ed9", 
                                cookieurl))
     cookiej.set_cookie(make_cookie("pc", "1", cookieurl))
     pross = drapro(cj = cookiej)
