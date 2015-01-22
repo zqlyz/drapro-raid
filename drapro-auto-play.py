@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 #------------------------
 #for ドラゴンプロヴィデンス(dmm) autoレイド
-#version: 0.2
-#已实现功能：实现自动探索area，自动打raidboss（自己和他人都可以）
-#缺陷：自己打不过的boss不能救援请求，cookie失效后脚本就无用
+#version: 0.3
+#已实现功能：实现自动探索area，自动打raidboss（自己和他人都可以），自己打不过的boss不能救援请求
+#缺陷：cookie失效后脚本就无用
 #代码：编码不整洁，混乱
 #Create Date: 01/16/2015
 import httplib
@@ -34,17 +34,20 @@ class drapro:
     #自己レイドboss url
     self_boss_url_re = re.compile(r'<a href="(.*?/battle_top/.*?)".*?</a>')
 
+    self_help_request_re = re.compile(
+        r'<a href="(.*?help_request.*?)".*?style="display:none">')
+
     #探索选择的stage匹配
     stage_4_re = re.compile(
-        r'<a href="(.*?quest_exec/6.*?)".*?class="btnMR push-motion0">')
+        r'<a href="(.*?quest_exec/7.*?)".*?class="btnMR push-motion0">')
 
     #用于判断是否是出现areaboss
     area_boss_re = re.compile(
-        r'<a href="(.*?boss_battle_flash/6.*?)" class="btnLR push-motion0">')
+        r'<a href="(.*?boss_battle_flash/7.*?)" class="btnLR push-motion0">')
 
     #area重开时需要第二次匹配url
     area_again_re = re.compile(
-        r'var nextUrl = "(http:/.*?/quest_exec/6.*?)";')
+        r'var nextUrl = "(http:/.*?/quest_exec/7.*?)";')
 
     #保存已打了自己的raidboss的次数
     self_boss_beat_times = 0
@@ -52,7 +55,8 @@ class drapro:
     #header
     header = {
     'User-Agent' : 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 \
-                    (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36'
+                    (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36',
+    'Connection' : 'keep-alive'
     }
     def __init__(self, cj): 
         self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
@@ -62,8 +66,9 @@ class drapro:
         req = urllib2.Request(url, headers = self.header)
         try:
             response  = self.opener.open(req)
-        except httplib.BadStatusLine,e:
-            print 'httplib.BadStatusLine error'
+        except Exception,e:
+            print Exception,":",e
+            return 
         page = response.read()
         #print page
         return page.decode("utf-8")
@@ -72,11 +77,12 @@ class drapro:
     def help_request_url(self, raid_url):
         page = self.__openurl(raid_url)
         self_boss_id = self.self_boss_id_re.findall(page, re.S)
-        
+        self_boss_url = self.self_boss_url_re.findall(page, re.S)
         if not self_boss_id:
-            self_boss_beat_times = 0
+            self.self_boss_beat_times = 0
         print 'self_boss_id :' + str(self_boss_id)
-        return self_boss_id ,self.help_request_re.findall(page, re.S)
+        print 'self_boss_url :' + str(self_boss_url)
+        return self_boss_url, self_boss_id, self.help_request_re.findall(page, re.S)
 
     #得到bossID
     def get_boss_id(self, request_url):
@@ -88,18 +94,25 @@ class drapro:
             self.beat_boss(id)
 
     #打自己的boss
-    def beat_self_boss(self, self_boss_id):
+    def beat_self_boss(self, self_boss_url, self_boss_id):
         if self_boss_id:
             #在1,3,5次打（即打了0,2,4次的时候）的时候用一倍攻击其余时候用三倍攻击
+            if self.self_boss_beat_times > 5:
+                result = self.__openurl(self_boss_url)
+                help_request_url = self.self_help_request_re.findall(result, re.S)
+                print 'help_request_url :'+ str(help_request_url)
+                self.__openurl(help_request_url[0])
+                return
             if not (self.self_boss_beat_times % 2):
                 self.beat_boss(self_boss_id)
             else:
                 self.beat_boss(self_boss_id, '3')
+
             self.self_boss_beat_times += 1
 
     #打boss, method = "1"免费, method = "2"一倍攻击，method = "3"三倍攻击
     def beat_boss(self, boss_id, method = '1'):
-        fileHandle = open('raid_boss.log','a')
+        #fileHandle = open('raid_boss.log','a')
         #第一次0bp的url
         msg = self.__openurl(
             u'http://www.drapro.dmmgames.com/raid/raid_battle_practice/'
@@ -109,16 +122,16 @@ class drapro:
         print 'time :' + currenttime
         print 'boss_id :' + boss_id
         print msg
-        fileHandle.write ('time :'+ str(currenttime) +'\n' 
-                        + 'boss_id :' + str(boss_id) + '\n'
-                        + str(msg) + '\n')
-        fileHandle.close()
+        #fileHandle.write ('time :'+ str(currenttime) +'\n' 
+        #                + 'boss_id :' + str(boss_id) + '\n'
+        #                + str(msg) + '\n')
+        #fileHandle.close()
 
     #外部调用的主函数
     def run(self, raid_url = "http://www.drapro.dmmgames.com/raid"):
-        self_boss_id, hrequest_url = self.help_request_url(raid_url)
+        self_boss_url, self_boss_id, hrequest_url = self.help_request_url(raid_url)
         if self_boss_id:
-            self.beat_self_boss(self_boss_id[0])
+            self.beat_self_boss(self_boss_url[0], self_boss_id[0])
         if hrequest_url:
             print hrequest_url
             boss_id = self.get_boss_id(hrequest_url[0])
@@ -180,18 +193,18 @@ def main():
     cookiej = cookielib.CookieJar()
     cookiej.set_cookie(make_cookie("open_id", "12379742", cookieurl))
     cookiej.set_cookie(make_cookie("open_sess_id", 
-                              "068d0372779e971c5dd208a256416efd237e7ed9", 
+                              "74b77ce9c30ca60f3010afae6cde2acc1702e2da", 
                                cookieurl))
     cookiej.set_cookie(make_cookie("pc", "1", cookieurl))
     pross = drapro(cj = cookiej)
     count = 0
     while True:
         pross.run()
-        if not (count % 5):
+        if not (count % 10):
             count = 0
             pross.test()
         count += 1
-        time.sleep(100)
+        time.sleep(60)
 #------End of funciton main------
 
 
